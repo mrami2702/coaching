@@ -1,4 +1,5 @@
 .env
 data/integration_tokens.json
+data/integration_cache.json
 __pycache__/
 *.pyc
