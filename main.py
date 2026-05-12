@@ -28,6 +28,7 @@ IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
 SECTIONS = ["about", "goals", "coach_needs", "races", "weaknesses", "archive"]
 AUTH_REALM = "coach-site"
 SPOTIFY_CACHE_TTL = 600
+SPOTIFY_CACHE_VERSION = 2
 
 DATA_DIR.mkdir(exist_ok=True)
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
@@ -119,6 +120,7 @@ def request_json(
     method: str = "GET",
     headers: dict | None = None,
     data: dict | None = None,
+    retries: int = 1,
 ) -> dict:
     body = None
     req_headers = headers or {}
@@ -129,16 +131,25 @@ def request_json(
             **req_headers,
         }
 
-    request = urllib.request.Request(url, data=body, headers=req_headers, method=method)
-    try:
-        with urllib.request.urlopen(request, timeout=12) as response:
-            raw = response.read().decode("utf-8")
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as exc:
-        raw = exc.read().decode("utf-8", errors="replace")
-        raise IntegrationError(f"API request failed ({exc.code}): {raw}", exc.code)
-    except urllib.error.URLError as exc:
-        raise IntegrationError(f"Could not reach API: {exc.reason}")
+    for attempt in range(retries + 1):
+        request = urllib.request.Request(url, data=body, headers=req_headers, method=method)
+        try:
+            with urllib.request.urlopen(request, timeout=12) as response:
+                raw = response.read().decode("utf-8")
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as exc:
+            raw = exc.read().decode("utf-8", errors="replace")
+            if exc.code >= 500 and attempt < retries:
+                time.sleep(0.4)
+                continue
+            raise IntegrationError(f"API request failed ({exc.code}): {raw}", exc.code)
+        except urllib.error.URLError as exc:
+            if attempt < retries:
+                time.sleep(0.4)
+                continue
+            raise IntegrationError(f"Could not reach API: {exc.reason}")
+
+    raise IntegrationError("API request failed.")
 
 
 def image_from(images: list[dict], target_px: int = 160) -> str:
@@ -416,7 +427,13 @@ async def delete_image(section: str):
 async def spotify_overview():
     cache = load_integration_cache()
     cached_spotify = cache.get("spotify") or {}
-    if cached_spotify.get("expires_at", 0) > time.time():
+    cached_data = cached_spotify.get("data") or {}
+    has_clean_cache = (
+        cached_spotify.get("version") == SPOTIFY_CACHE_VERSION
+        and cached_data.get("ok") is True
+        and not cached_data.get("errors")
+    )
+    if has_clean_cache and cached_spotify.get("expires_at", 0) > time.time():
         return {**cached_spotify.get("data", {}), "cached": True}
 
     response = {
@@ -436,9 +453,9 @@ async def spotify_overview():
         response["errors"]["playlists"] = str(exc)
 
     if response["errors"] and not response["recent_tracks"] and not response["playlists"]:
-        if cached_spotify.get("data"):
+        if has_clean_cache:
             return {
-                **cached_spotify["data"],
+                **cached_data,
                 "cached": True,
                 "stale": True,
                 "errors": response["errors"],
@@ -449,11 +466,13 @@ async def spotify_overview():
             "message": "Spotify is unavailable.",
         }
 
-    cache["spotify"] = {
-        "expires_at": time.time() + SPOTIFY_CACHE_TTL,
-        "data": response,
-    }
-    save_integration_cache(cache)
+    if not response["errors"]:
+        cache["spotify"] = {
+            "version": SPOTIFY_CACHE_VERSION,
+            "expires_at": time.time() + SPOTIFY_CACHE_TTL,
+            "data": response,
+        }
+        save_integration_cache(cache)
     return response
 
 
