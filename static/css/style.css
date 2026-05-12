@@ -330,7 +330,10 @@ body {
   width: 100%;
 }
 
-.playlist-art { object-fit: cover; }
+.playlist-art {
+  background: linear-gradient(135deg, rgba(224, 123, 84, 0.22), rgba(244, 162, 97, 0.18));
+  object-fit: cover;
+}
 
 .athlete-line {
   display: flex;

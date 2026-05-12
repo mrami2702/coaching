@@ -141,8 +141,21 @@ def request_json(
         raise IntegrationError(f"Could not reach API: {exc.reason}")
 
 
-def image_from(images: list[dict]) -> str:
-    return images[0]["url"] if images else ""
+def image_from(images: list[dict], target_px: int = 160) -> str:
+    if not images:
+        return ""
+
+    sized_images = [
+        image for image in images
+        if image.get("url") and isinstance(image.get("width"), int)
+    ]
+    if not sized_images:
+        return images[0].get("url", "")
+
+    large_enough = [image for image in sized_images if image["width"] >= target_px]
+    if large_enough:
+        return min(large_enough, key=lambda image: image["width"]).get("url", "")
+    return max(sized_images, key=lambda image: image["width"]).get("url", "")
 
 
 def seconds_to_label(seconds: int | float | None) -> str:
@@ -261,7 +274,7 @@ def get_spotify_recent_tracks() -> list[dict]:
                 "name": track.get("name", ""),
                 "artists": ", ".join(artist.get("name", "") for artist in track.get("artists", [])),
                 "album": album.get("name", ""),
-                "image": image_from(album.get("images", [])),
+                "image": image_from(album.get("images", []), 96),
                 "url": (track.get("external_urls") or {}).get("spotify", ""),
                 "played_at": item.get("played_at", ""),
             }
@@ -287,7 +300,7 @@ def get_spotify_playlists() -> list[dict]:
                 "name": item.get("name", ""),
                 "description": item.get("description", ""),
                 "tracks": (item.get("tracks") or {}).get("total", 0),
-                "image": image_from(item.get("images", [])),
+                "image": image_from(item.get("images", []), 180),
                 "url": (item.get("external_urls") or {}).get("spotify", ""),
             }
         )
