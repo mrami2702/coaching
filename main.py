@@ -389,14 +389,30 @@ async def delete_image(section: str):
 
 @app.get("/api/spotify")
 async def spotify_overview():
+    response = {
+        "ok": True,
+        "recent_tracks": [],
+        "playlists": [],
+        "errors": {},
+    }
     try:
-        return {
-            "ok": True,
-            "recent_tracks": get_spotify_recent_tracks(),
-            "playlists": get_spotify_playlists(),
-        }
+        response["recent_tracks"] = get_spotify_recent_tracks()
     except IntegrationError as exc:
-        return {"ok": False, "message": str(exc)}
+        response["errors"]["recent_tracks"] = str(exc)
+
+    try:
+        response["playlists"] = get_spotify_playlists()
+    except IntegrationError as exc:
+        response["errors"]["playlists"] = str(exc)
+
+    if response["errors"] and not response["recent_tracks"] and not response["playlists"]:
+        return {
+            **response,
+            "ok": False,
+            "message": "Spotify is unavailable.",
+        }
+
+    return response
 
 
 @app.get("/api/strava")
