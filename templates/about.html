@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-header fade d1">
+  <h1>About Me.</h1>
+  <p class="page-subtitle">I am kind of cool</p>
+</div>
+
+<!-- Bio card -->
+<div class="card fade d2">
+  <div class="card-label">the basics</div>
+  <div class="location-path">
+    <span>El Paso, TX</span>
+    <span class="arrow">→</span>
+    <span>Northern Virginia</span>
+    <span class="arrow">→</span>
+    <span class="current">Austin, TX</span>
+    <span class="aside">"mostly for vibes (mistake? maybe)"</span>
+  </div>
+
+  <div class="tags">
+    <span class="tag">25 years old</span>
+    <span class="tag">consulting: software dev/ builder </span>
+    <span class="tag">reader &amp; writer (ideally)</span>
+    <span class="tag fun">don't ask me about AI unless you have 3 hours</span>
+  </div>
+</div>
+
+<!-- Simple Pleasures -->
+<div class="card fade d3">
+  <div class="card-label">simple pleasures</div>
+  <ul class="pleasure-list">
+    <li>a life that feels soft &amp; warm</li>
+    <li>sophisticated satire, poetic prose, and of course alliteration</li>
+    <li>metaphors (sometimes similes)</li>
+    <li>a carefully crafted contextualized playlist (and more alliteration)</li>
+    <li>getting lost down a rabbit hole of deep focus work</li>
+  </ul>
+</div>
+
+<!-- Tagline typewriter -->
+<div class="card fade d4"
+     x-data="typewriter('swim, bike, run kind of way :)')"
+     x-init="init()">
+  <p class="hero-tagline">
+    I want to live, laugh, love — but in a
+    <span class="typed-word" x-text="typed"></span><span
+      class="cursor-blink"
+      x-show="showCursor"
+      style="display:inline-block"></span>
+  </p>
+</div>
+
+<!-- Live-ish integrations -->
+<div class="integration-grid fade d5">
+  <section class="card integration-card spotify-card"
+           x-data="spotifyPanel()"
+           x-init="init()">
+    <div class="card-label">soundtrack lately</div>
+    <div class="integration-state" x-show="loading">loading spotify...</div>
+    <div class="integration-state error" x-show="error" x-text="error"></div>
+
+    <div x-show="!loading && !error" x-cloak>
+      <div class="integration-heading">
+        <h2>Recently played.</h2>
+        <a class="text-link" href="https://open.spotify.com" target="_blank" rel="noreferrer">open spotify</a>
+      </div>
+
+      <div class="track-list">
+        <template x-for="track in recentTracks" :key="track.url || track.name">
+          <a class="track-row" :href="track.url" target="_blank" rel="noreferrer">
+            <img :src="track.image" alt="" class="track-art" x-show="track.image">
+            <div class="track-fallback" x-show="!track.image"></div>
+            <div class="track-copy">
+              <span class="track-name" x-text="track.name"></span>
+              <span class="track-artist" x-text="track.artists"></span>
+            </div>
+          </a>
+        </template>
+        <div class="integration-state" x-show="recentTracks.length === 0">no recent tracks yet.</div>
+      </div>
+
+      <div class="playlist-strip" x-show="playlists.length">
+        <div class="mini-label">public playlists</div>
+        <div class="playlist-grid">
+          <template x-for="playlist in playlists" :key="playlist.url || playlist.name">
+            <a class="playlist-tile" :href="playlist.url" target="_blank" rel="noreferrer">
+              <img :src="playlist.image" alt="" class="playlist-art" x-show="playlist.image">
+              <div class="playlist-fallback" x-show="!playlist.image"></div>
+              <span x-text="playlist.name"></span>
+            </a>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card integration-card strava-card"
+           x-data="stravaPanel()"
+           x-init="init()">
+    <div class="card-label">strava check-in</div>
+    <div class="integration-state" x-show="loading">loading strava...</div>
+    <div class="integration-state error" x-show="error" x-text="error"></div>
+
+    <div x-show="!loading && !error" x-cloak>
+      <div class="integration-heading">
+        <h2>Recent movement.</h2>
+        <a class="text-link" :href="athlete && athlete.url ? athlete.url : 'https://www.strava.com/'" target="_blank" rel="noreferrer">open strava</a>
+      </div>
+
+      <div class="athlete-line" x-show="athlete">
+        <img :src="athlete.image" alt="" class="athlete-photo" x-show="athlete && athlete.image">
+        <div class="athlete-fallback" x-show="!athlete || !athlete.image"></div>
+        <div>
+          <a class="athlete-name" :href="athlete.url" target="_blank" rel="noreferrer" x-text="athlete.name"></a>
+          <div class="athlete-location">
+            <span x-text="[athlete.city, athlete.state].filter(Boolean).join(', ')"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="activity-panel" x-show="activities.length">
+        <div class="mini-label">last 5 activities</div>
+        <div class="activity-list">
+          <template x-for="activity in activities" :key="activity.url || activity.name">
+            <a class="activity-row" :href="activity.url" target="_blank" rel="noreferrer">
+              <div class="activity-row-main">
+                <span class="activity-title" x-text="activity.name"></span>
+                <span class="activity-sport" x-text="activity.sport"></span>
+              </div>
+              <div class="activity-meta">
+                <span x-text="activity.distance"></span>
+                <span x-text="activity.moving_time"></span>
+                <span x-text="activity.elevation"></span>
+              </div>
+            </a>
+          </template>
+        </div>
+      </div>
+
+      <div class="integration-state" x-show="!activities.length">
+        no public activity found.
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Notes -->
+<div class="notes-section fade d6"
+     x-data="notesHandler('about', {{ note_text | tojson }})">
+  <div class="sticky">
+    <div class="sticky-header">
+      <span class="sticky-label">📝 notes from this section</span>
+      <span class="save-status" x-show="saved" x-cloak>saved ✓</span>
+    </div>
+    <textarea
+      x-model="text"
+      @blur="saveNote()"
+      placeholder="jot anything down here — it auto-saves on blur"></textarea>
+    <div class="sticky-actions">
+      <button class="btn btn-ghost" @click="saveNote()">save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image zone -->
+<div class="image-zone-wrap fade d7"
+     x-data="imageZone('about', {{ image_url | tojson }})"
+     @dragover="handleDragOver($event)"
+     @dragleave="handleDragLeave()"
+     @drop="handleDrop($event)">
+
+  <div class="image-zone" :class="{ dragging }" x-show="!imageUrl" @click="triggerPicker()">
+    <div class="zone-emoji">🎨</div>
+    <p class="zone-hint">drop a meme / photo here or click to upload</p>
+    <input type="file" accept="image/*" x-ref="picker" @change="handleFile($event)">
+  </div>
+
+  <div x-show="imageUrl" x-cloak>
+    <img :src="imageUrl" class="uploaded-img" alt="section image">
+    <div class="img-controls">
+      <button class="btn btn-danger" @click="remove()">remove image</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

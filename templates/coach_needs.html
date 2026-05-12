@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-header fade d1">
+  <h1>What I Need.</h1>
+  <p class="page-subtitle">the real talk, and then the fun stuff</p>
+</div>
+
+<!-- The Real Talk -->
+<div class="card fade d2">
+  <div class="card-label">what i actually need from a coach</div>
+  <h2>The earnest version.</h2>
+  <p style="margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--warm-light);">
+    Not sure exactly what kind of coaching style works for me yet — hoping you can help me figure it out.
+  </p>
+
+  <ul class="need-list">
+    <li class="need-item">
+      <span class="need-icon">⚖️</span>
+      <div class="need-text">
+        <div class="need-title">Calibrated toughness</div>
+        <div class="need-desc">Sometimes I'm too hard on myself in an annoying, counterproductive way. I need someone who knows when to push and when to say "you're fine, chill." Finding that balance is big.</div>
+      </div>
+    </li>
+    <li class="need-item">
+      <span class="need-icon">🧠</span>
+      <div class="need-text">
+        <div class="need-title">Do I really need rest, or am I just a baby?</div>
+        <div class="need-desc">I genuinely cannot always tell the difference. Help me understand when to go hard and when to actually rest — and help me not feel guilty about the latter.</div>
+      </div>
+    </li>
+    <li class="need-item">
+      <span class="need-icon">🗺️</span>
+      <div class="need-text">
+        <div class="need-title">Mentorship &amp; guidance</div>
+        <div class="need-desc">Probably the biggest thing. I'm not just looking for workouts — I want to actually understand what I'm doing and why. I love to learn.</div>
+      </div>
+    </li>
+    <li class="need-item">
+      <span class="need-icon">🧩</span>
+      <div class="need-text">
+        <div class="need-title">Help fitting it into real life</div>
+        <div class="need-desc">I have a job, friends, family, a dog, and a personality. I need training that fits into a life I actually want to be living — not training that replaces it. Live, laugh, love, but in a swim bike run kind of way.</div>
+      </div>
+    </li>
+    <li class="need-item">
+      <span class="need-icon">🔄</span>
+      <div class="need-text">
+        <div class="need-title">Finding balance (as best as possible)</div>
+        <div class="need-desc">I know perfect balance is a myth. I just want to get closer to it. Whatever that looks like for this season of life.</div>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<!-- Section shift -->
+<div class="section-shift fade d3">okay but also...</div>
+
+<!-- Nice to Have -->
+<div class="card fade d3">
+  <div class="card-label">nice to have — for fun</div>
+  <h2>The less serious asks.</h2>
+  <p style="margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--warm-light);">
+    Having fun makes training so much better.  
+  </p>
+
+  <div class="nice-grid">
+    <div class="nice-card">
+      <div class="nice-icon">😂</div>
+      <div class="nice-title">Meme &amp; joke tolerance</div>
+      <div class="nice-sub">I mostly enjoy being playful. Until I have to open water swim where I will inevitably cry a little bit (I cried the first 3 times) :P</div>
+    </div>
+    <div class="nice-card">
+      <div class="nice-icon">📚</div>
+      <div class="nice-title">Info sharing</div>
+      <div class="nice-sub">Articles, podcasts, YT videos — I genuinely love learning how this all works. Send me stuff. I will consume it.</div>
+    </div>
+    <div class="nice-card">
+      <div class="nice-icon">🤝</div>
+      <div class="nice-title">Caring &amp; authentic</div>
+      <div class="nice-sub">I always appreciate personality! #MakeTriathlonCool </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pull quote -->
+<div class="pull-quote fade d4">
+  "I want to live, laugh, love — but in a swim, bike, run kind of way."
+</div>
+
+<!-- Notes -->
+<div class="notes-section fade d5"
+     x-data="notesHandler('coach_needs', {{ note_text | tojson }})">
+  <div class="sticky">
+    <div class="sticky-header">
+      <span class="sticky-label">📝 notes from this section</span>
+      <span class="save-status" x-show="saved" x-cloak>saved ✓</span>
+    </div>
+    <textarea
+      x-model="text"
+      @blur="saveNote()"
+      placeholder="coaching style notes, expectations, things to revisit..."></textarea>
+    <div class="sticky-actions">
+      <button class="btn btn-ghost" @click="saveNote()">save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image zone -->
+<div class="image-zone-wrap fade d6"
+     x-data="imageZone('coach_needs', {{ image_url | tojson }})"
+     @dragover="handleDragOver($event)"
+     @dragleave="handleDragLeave()"
+     @drop="handleDrop($event)">
+  <div class="image-zone" :class="{ dragging }" x-show="!imageUrl" @click="triggerPicker()">
+    <div class="zone-emoji">📸</div>
+    <p class="zone-hint">drop an image here or click to upload</p>
+    <input type="file" accept="image/*" x-ref="picker" @change="handleFile($event)">
+  </div>
+  <div x-show="imageUrl" x-cloak>
+    <img :src="imageUrl" class="uploaded-img" alt="needs image">
+    <div class="img-controls">
+      <button class="btn btn-danger" @click="remove()">remove image</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

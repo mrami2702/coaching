@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hi, coach.</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-brand">hi, coach. ✺</div>
+    <a href="/about"       class="nav-link {% if active == 'about' %}active{% endif %}">About Me</a>
+    <a href="/goals"       class="nav-link {% if active == 'goals' %}active{% endif %}">Goals</a>
+    <a href="/coach_needs" class="nav-link {% if active == 'coach_needs' %}active{% endif %}">What I Need</a>
+    <a href="/races"       class="nav-link {% if active == 'races' %}active{% endif %}">Race Plans</a>
+    <a href="/weaknesses"  class="nav-link {% if active == 'weaknesses' %}active{% endif %}">Weaknesses</a>
+    <a href="/archive"     class="nav-link {% if active == 'archive' %}active{% endif %}">Archive</a>
+  </nav>
+
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    function notesHandler(section, initial) {
+      return {
+        text: initial,
+        saved: false,
+        saveNote() {
+          fetch(`/api/notes/${section}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: this.text })
+          }).then(() => {
+            this.saved = true;
+            setTimeout(() => this.saved = false, 2000);
+          });
+        }
+      }
+    }
+
+    function imageZone(section, initialUrl) {
+      return {
+        imageUrl: initialUrl || null,
+        dragging: false,
+        handleDragOver(e) { e.preventDefault(); this.dragging = true; },
+        handleDragLeave() { this.dragging = false; },
+        handleDrop(e) {
+          e.preventDefault();
+          this.dragging = false;
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith('image/')) this.upload(file);
+        },
+        triggerPicker() { this.$refs.picker.click(); },
+        handleFile(e) {
+          const file = e.target.files[0];
+          if (file) this.upload(file);
+        },
+        async upload(file) {
+          const form = new FormData();
+          form.append('file', file);
+          const r = await fetch(`/api/images/${section}`, { method: 'POST', body: form });
+          const d = await r.json();
+          if (d.ok) this.imageUrl = d.url + '?t=' + Date.now();
+        },
+        async remove() {
+          await fetch(`/api/images/${section}`, { method: 'DELETE' });
+          this.imageUrl = null;
+        }
+      }
+    }
+
+    function typewriter(phrase, delayMs) {
+      return {
+        typed: '',
+        showCursor: true,
+        init() {
+          let i = 0;
+          const tick = setInterval(() => {
+            if (i <= phrase.length) {
+              this.typed = phrase.slice(0, i++);
+            } else {
+              clearInterval(tick);
+              setTimeout(() => { this.showCursor = false; }, 800);
+            }
+          }, delayMs || 65);
+        }
+      }
+    }
+
+    function spotifyPanel() {
+      return {
+        loading: true,
+        error: '',
+        recentTracks: [],
+        playlists: [],
+        async init() {
+          try {
+            const r = await fetch('/api/spotify');
+            const d = await r.json();
+            if (!d.ok) throw new Error(d.message || 'Spotify is unavailable.');
+            this.recentTracks = d.recent_tracks || [];
+            this.playlists = d.playlists || [];
+          } catch (e) {
+            this.error = e.message || 'Spotify is unavailable.';
+          } finally {
+            this.loading = false;
+          }
+        }
+      }
+    }
+
+    function stravaPanel() {
+      return {
+        loading: true,
+        error: '',
+        athlete: null,
+        latestActivity: null,
+        activities: [],
+        async init() {
+          try {
+            const r = await fetch('/api/strava');
+            const d = await r.json();
+            if (!d.ok) throw new Error(d.message || 'Strava is unavailable.');
+            this.athlete = d.athlete || null;
+            this.latestActivity = d.latest_activity || null;
+            this.activities = d.activities || [];
+          } catch (e) {
+            this.error = e.message || 'Strava is unavailable.';
+          } finally {
+            this.loading = false;
+          }
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>
