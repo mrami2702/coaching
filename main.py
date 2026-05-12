@@ -23,9 +23,11 @@ DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
 IMAGES_DIR = Path(os.getenv("IMAGES_DIR", DATA_DIR / "images"))
 NOTES_FILE = DATA_DIR / "notes.json"
 TOKENS_FILE = DATA_DIR / "integration_tokens.json"
+INTEGRATION_CACHE_FILE = DATA_DIR / "integration_cache.json"
 IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
 SECTIONS = ["about", "goals", "coach_needs", "races", "weaknesses", "archive"]
 AUTH_REALM = "coach-site"
+SPOTIFY_CACHE_TTL = 600
 
 DATA_DIR.mkdir(exist_ok=True)
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
@@ -87,6 +89,16 @@ def load_token_cache() -> dict:
 
 def save_token_cache(tokens: dict) -> None:
     TOKENS_FILE.write_text(json.dumps(tokens, indent=2), encoding="utf-8")
+
+
+def load_integration_cache() -> dict:
+    if INTEGRATION_CACHE_FILE.exists():
+        return json.loads(INTEGRATION_CACHE_FILE.read_text(encoding="utf-8"))
+    return {}
+
+
+def save_integration_cache(cache: dict) -> None:
+    INTEGRATION_CACHE_FILE.write_text(json.dumps(cache, indent=2), encoding="utf-8")
 
 
 def get_image_url(section: str) -> str:
@@ -389,6 +401,11 @@ async def delete_image(section: str):
 
 @app.get("/api/spotify")
 async def spotify_overview():
+    cache = load_integration_cache()
+    cached_spotify = cache.get("spotify") or {}
+    if cached_spotify.get("expires_at", 0) > time.time():
+        return {**cached_spotify.get("data", {}), "cached": True}
+
     response = {
         "ok": True,
         "recent_tracks": [],
@@ -406,12 +423,24 @@ async def spotify_overview():
         response["errors"]["playlists"] = str(exc)
 
     if response["errors"] and not response["recent_tracks"] and not response["playlists"]:
+        if cached_spotify.get("data"):
+            return {
+                **cached_spotify["data"],
+                "cached": True,
+                "stale": True,
+                "errors": response["errors"],
+            }
         return {
             **response,
             "ok": False,
             "message": "Spotify is unavailable.",
         }
 
+    cache["spotify"] = {
+        "expires_at": time.time() + SPOTIFY_CACHE_TTL,
+        "data": response,
+    }
+    save_integration_cache(cache)
     return response
 
 
