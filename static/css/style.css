@@ -782,7 +782,6 @@ body {
   align-items: baseline;
   gap: 0.7rem;
   font-family: 'Playfair Display', serif;
-  font-style: italic;
   font-size: 1rem;
   color: var(--warm-dark);
   line-height: 1.5;
