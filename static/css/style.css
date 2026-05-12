@@ -271,7 +271,7 @@ body {
 
 .track-name,
 .track-artist,
-.playlist-tile span,
+.playlist-name,
 .athlete-name,
 .activity-title {
   overflow-wrap: anywhere;
@@ -306,33 +306,60 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.playlist-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.playlist-tile {
-  color: var(--warm-mid);
+.playlist-list {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  font-size: 0.76rem;
-  font-weight: 700;
-  line-height: 1.25;
+  gap: 0.65rem;
+}
+
+.playlist-row {
+  color: inherit;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem;
+  border-radius: 10px;
   text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.playlist-row:hover {
+  background: rgba(224, 123, 84, 0.06);
+  transform: translateX(2px);
 }
 
 .playlist-art,
 .playlist-fallback {
-  aspect-ratio: 1;
-  border-radius: 10px;
-  width: 100%;
+  border-radius: 8px;
+  height: 46px;
+  width: 46px;
 }
 
 .playlist-art {
   background: linear-gradient(135deg, rgba(224, 123, 84, 0.22), rgba(244, 162, 97, 0.18));
   object-fit: cover;
+}
+
+.playlist-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.playlist-name {
+  color: var(--warm-dark);
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.playlist-meta {
+  color: var(--warm-light);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 0.12rem;
 }
 
 .athlete-line {
@@ -363,7 +390,7 @@ body {
 
 .athlete-name:hover,
 .activity-title:hover,
-.playlist-tile:hover span {
+.playlist-row:hover .playlist-name {
   color: var(--rust);
 }
 
@@ -809,7 +836,6 @@ body {
   .stat-grid { grid-template-columns: 1fr; }
   .nice-grid { grid-template-columns: 1fr; }
   .integration-grid { grid-template-columns: 1fr; }
-  .playlist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .nav-link { padding: 1rem 0.6rem; font-size: 0.7rem; }
   .main { padding: 2rem 1rem 4rem; }
 }

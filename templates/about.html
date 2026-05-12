@@ -82,12 +82,15 @@
 
       <div class="playlist-strip" x-show="playlists.length">
         <div class="mini-label">public playlists</div>
-        <div class="playlist-grid">
+        <div class="playlist-list">
           <template x-for="playlist in playlists" :key="playlist.url || playlist.name">
-            <a class="playlist-tile" :href="playlist.url" target="_blank" rel="noreferrer">
-              <img :src="playlist.image" alt="" class="playlist-art" x-show="playlist.image">
+            <a class="playlist-row" :href="playlist.url" target="_blank" rel="noreferrer">
+              <img :src="playlist.image" alt="" class="playlist-art" loading="lazy" x-show="playlist.image">
               <div class="playlist-fallback" x-show="!playlist.image"></div>
-              <span x-text="playlist.name"></span>
+              <div class="playlist-copy">
+                <span class="playlist-name" x-text="playlist.name"></span>
+                <span class="playlist-meta" x-text="`${playlist.tracks} tracks`"></span>
+              </div>
             </a>
           </template>
         </div>
